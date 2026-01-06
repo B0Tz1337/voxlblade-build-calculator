@@ -42,12 +42,6 @@
   <label for="race">Race</label>
   <select id="race"></select>
 
-  <label for="perk1">Perk 1</label>
-  <select id="perk1"></select>
-
-  <label for="perk2">Perk 2</label>
-  <select id="perk2"></select>
-
   <button onclick="calculate()">Calculate Build</button>
 
   <div id="result"></div>
@@ -70,8 +64,8 @@ const races = [
 
 // ======= BLADES (por enquanto só None) =======
 const blades = [
-  { name: "None", value: "none", baseDamage: 0, attackSpeed: 0, critChance: 0, critDamage: 1.0, armorPen: 0 }
-  // Aqui você adicionará futuramente todas as Blades com stats base
+  { name: "None", value: "none", baseDamage: 0, attackSpeed: 0, critChance: 0, critDamage: 1.0, armorPen: 0, perks: [] }
+  // Futuramente adicionar todas as Blades com stats base + perks passivos
 ];
 
 // ======= ARMAS / HANDLES =======
@@ -83,7 +77,8 @@ const weapons = [
     attackSpeed: 1.0,
     critChance: 0.05,
     critDamage: 1.5,
-    armorPen: 5
+    armorPen: 5,
+    perks: [] // perks passivos da arma, se houver
   },
   {
     name: "Reinforced Pole",
@@ -92,21 +87,10 @@ const weapons = [
     attackSpeed: 1.0,
     critChance: 0.05,
     critDamage: 1.5,
-    armorPen: 6
+    armorPen: 6,
+    perks: []
   }
-  // Futuramente adicionar todas as armas oficiais
-];
-
-// ======= PERKS =======
-const perks = [
-  { name: "Nenhum", type: "none", value: 0, description: "Nenhum bônus aplicado" },
-  { name: "Sharpshooter", type: "critChance", value: 0.05, description: "Aumenta 5% de chance de crítico" },
-  { name: "Berserker", type: "damage", value: 0.10, description: "Aumenta 10% de dano total" },
-  { name: "Swift Footed", type: "attackSpeed", value: 0.10, description: "Aumenta 10% de velocidade de ataque" },
-  { name: "Fortified", type: "protection", value: 5, description: "Aumenta 5 pontos de proteção" },
-  { name: "Armor Breaker", type: "armorPen", value: 5, description: "Aumenta penetração de armadura em 5" },
-  { name: "Elementalist", type: "elementalDamage", value: 0.15, description: "Aumenta 15% de dano elemental" },
-  { name: "Critical Mastery", type: "critDamage", value: 0.25, description: "Aumenta 25% de dano crítico" }
+  // Futuramente adicionar todas as armas oficiais com perks passivos
 ];
 
 // ======= POPULAR DROPDOWNS =======
@@ -115,7 +99,6 @@ function populateSelect(select, array) {
     const option = document.createElement("option");
     option.value = item.value;
     option.text = item.name;
-    option.title = item.description || item.special || "";
     select.add(option);
   });
 }
@@ -123,21 +106,6 @@ function populateSelect(select, array) {
 populateSelect(document.getElementById("race"), races);
 populateSelect(document.getElementById("blade"), blades);
 populateSelect(document.getElementById("weapon"), weapons);
-populateSelect(document.getElementById("perk1"), perks);
-populateSelect(document.getElementById("perk2"), perks);
-
-// Evitar perks duplicados
-const perk1Select = document.getElementById("perk1");
-const perk2Select = document.getElementById("perk2");
-function updatePerkOptions() {
-  const perk1Value = perk1Select.value;
-  const perk2Value = perk2Select.value;
-  [...perk1Select.options].forEach(option => option.disabled = option.value === perk2Value && option.value !== "Nenhum");
-  [...perk2Select.options].forEach(option => option.disabled = option.value === perk1Value && option.value !== "Nenhum");
-}
-perk1Select.addEventListener("change", updatePerkOptions);
-perk2Select.addEventListener("change", updatePerkOptions);
-updatePerkOptions();
 
 // ======= CÁLCULO DE DPS =======
 const playerMaxHP = 100;
@@ -147,14 +115,10 @@ function calculate() {
   const bladeValue = document.getElementById("blade").value;
   const weaponValue = document.getElementById("weapon").value;
   const raceValue = document.getElementById("race").value;
-  const perk1Value = perk1Select.value;
-  const perk2Value = perk2Select.value;
 
   const selectedBlade = blades.find(b => b.value === bladeValue);
   const selectedWeapon = weapons.find(w => w.value === weaponValue);
   const selectedRace = races.find(r => r.value === raceValue);
-  const selectedPerk1 = perks.find(p => p.name === perk1Value);
-  const selectedPerk2 = perks.find(p => p.name === perk2Value);
 
   // Stats base combinados: Blade + Weapon
   let dmg = selectedWeapon.baseDamage + selectedBlade.baseDamage;
@@ -164,16 +128,8 @@ function calculate() {
   let armorPen = selectedWeapon.armorPen + selectedBlade.armorPen;
   let protection = 0;
 
-  // Bônus de raça
-  if(selectedRace.value === "human" && playerHP < 0.5 * playerMaxHP) {
-    dmg *= 1 + (selectedRace.bonuses.damageBoostUnder50HP || 0);
-  }
-  if(selectedRace.bonuses.attackSpeed) speed *= 1 + selectedRace.bonuses.attackSpeed;
-  if(selectedRace.bonuses.armorPenWeaponArts) armorPen += selectedRace.bonuses.armorPenWeaponArts;
-
-  // Aplicar perks
-  [selectedPerk1, selectedPerk2].forEach(p => {
-    if(!p || p.type === "none") return;
+  // Aplicar perks passivos (Blade + Weapon)
+  [...(selectedBlade.perks || []), ...(selectedWeapon.perks || [])].forEach(p => {
     switch(p.type){
       case "damage": dmg *= 1 + p.value; break;
       case "attackSpeed": speed *= 1 + p.value; break;
@@ -184,6 +140,13 @@ function calculate() {
     }
   });
 
+  // Bônus de raça
+  if(selectedRace.value === "human" && playerHP < 0.5 * playerMaxHP) {
+    dmg *= 1 + (selectedRace.bonuses.damageBoostUnder50HP || 0);
+  }
+  if(selectedRace.bonuses.attackSpeed) speed *= 1 + selectedRace.bonuses.attackSpeed;
+  if(selectedRace.bonuses.armorPenWeaponArts) armorPen += selectedRace.bonuses.armorPenWeaponArts;
+
   const dps = dmg * speed * (1 + critChance * (critDamage - 1));
 
   document.getElementById("result").innerHTML =
@@ -192,8 +155,6 @@ function calculate() {
      <p>Raça: ${selectedRace.name}</p>
      <p>Blade: ${selectedBlade.name}</p>
      <p>Weapon / Handle: ${selectedWeapon.name}</p>
-     <p>Perk 1: ${selectedPerk1 ? selectedPerk1.name : "Nenhum"}</p>
-     <p>Perk 2: ${selectedPerk2 ? selectedPerk2.name : "Nenhum"}</p>
      <p>Proteção total: ${protection}</p>
      <p>Penetração de armadura: ${armorPen}</p>
      <p>Especial da raça: ${selectedRace.special}</p>`;
