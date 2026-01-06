@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Voxlblade Build Calculator</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 20px;
+    }
+    h1 { color: #38bdf8; }
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 16px;
+    }
+    .box {
+      background: #020617;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Voxlblade Build Calculator</h1>
+
+<div class="box">
+  <label>Weapon</label>
+  <select id="weapon">
+    <option value="gilded">Gilded Pole</option>
+    <option value="reinforced">Reinforced Pole</option>
+  </select>
+
+  <label>Race</label>
+  <select id="race">
+    <option value="none">None</option>
+    <option value="highelf">High Elf</option>
+    <option value="kitsune">Kitsune</option>
+  </select>
+
+  <button onclick="calculate()">Calculate Build</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+function calculate() {
+  let dmg = 10;
+  let speed = 1;
+
+  const weapon = document.getElementById("weapon").value;
+  const race = document.getElementById("race").value;
+
+  if (weapon === "gilded") { dmg = 12; speed = 1; }
+  if (weapon === "reinforced") { dmg = 11; speed = 1; }
+
+  if (race === "highelf") dmg *= 1.25;
+  if (race === "kitsune") speed += 0.1;
+
+  const dps = dmg * speed;
+
+  document.getElementById("result").innerHTML =
+    `<h3>DPS Final</h3><strong>${dps.toFixed(2)}</strong>`;
+}
+</script>
+
+</body>
+</html>
