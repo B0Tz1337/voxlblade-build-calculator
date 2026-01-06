@@ -36,6 +36,12 @@
   <label>Race</label>
   <select id="race"></select>
 
+  <label>Perk 1</label>
+  <select id="perk1"></select>
+
+  <label>Perk 2</label>
+  <select id="perk2"></select>
+
   <button onclick="calculate()">Calculate Build</button>
 
   <div id="result"></div>
@@ -62,7 +68,17 @@ const weapons = [
   { name: "Reinforced Pole", value: "reinforcedpole", baseDamage: 11, attackSpeed: 1.0, critChance: 0.05, critDamage: 1.5, armorPen: 6 },
   { name: "Oak Bow", value: "oakbow", baseDamage: 40, attackSpeed: 1.2, critChance: 0.08, critDamage: 1.5, armorPen: 2 },
   { name: "Fire Staff", value: "firestaff", baseDamage: 60, attackSpeed: 0.9, critChance: 0.12, critDamage: 1.6, armorPen: 0 }
-  // Adicione outras armas oficiais aqui
+];
+
+// ======= PERKS =======
+const perks = [
+  { name: "Sharpshooter", type: "critChance", value: 0.05, description: "Aumenta 5% de chance de crítico" },
+  { name: "Berserker", type: "damage", value: 0.10, description: "Aumenta 10% de dano total" },
+  { name: "Swift Footed", type: "attackSpeed", value: 0.10, description: "Aumenta 10% de velocidade de ataque" },
+  { name: "Fortified", type: "protection", value: 5, description: "Aumenta 5 pontos de proteção" },
+  { name: "Armor Breaker", type: "armorPen", value: 5, description: "Aumenta penetração de armadura em 5" },
+  { name: "Elementalist", type: "elementalDamage", value: 0.15, description: "Aumenta 15% de dano elemental" },
+  { name: "Critical Mastery", type: "critDamage", value: 0.25, description: "Aumenta 25% de dano crítico" }
 ];
 
 // ======= POPULAR DROPDOWNS =======
@@ -82,35 +98,71 @@ weapons.forEach(w => {
   weaponSelect.add(option);
 });
 
+const perk1Select = document.getElementById("perk1");
+const perk2Select = document.getElementById("perk2");
+perks.forEach(p => {
+  [perk1Select, perk2Select].forEach(select => {
+    const option = document.createElement("option");
+    option.value = p.name;
+    option.text = p.name;
+    select.add(option);
+  });
+});
+
 // ======= CÁLCULO DE DPS =======
 const playerMaxHP = 100;
-let playerHP = 100; // você pode ajustar dinamicamente depois
+let playerHP = 100; // ajustar dinamicamente depois
 
 function calculate() {
   const weaponValue = document.getElementById("weapon").value;
   const raceValue = document.getElementById("race").value;
+  const perk1Value = document.getElementById("perk1").value;
+  const perk2Value = document.getElementById("perk2").value;
 
   const selectedWeapon = weapons.find(w => w.value === weaponValue);
   const selectedRace = races.find(r => r.value === raceValue);
+  const selectedPerk1 = perks.find(p => p.name === perk1Value);
+  const selectedPerk2 = perks.find(p => p.name === perk2Value);
 
   let dmg = selectedWeapon.baseDamage;
   let speed = selectedWeapon.attackSpeed;
+  let critChance = selectedWeapon.critChance;
+  let critDamage = selectedWeapon.critDamage;
+  let armorPen = selectedWeapon.armorPen || 0;
+  let protection = 0;
 
   // Bônus de raça
   if(selectedRace.value === "human" && playerHP < 0.5 * playerMaxHP){
-      dmg *= 1 + selectedRace.bonuses.damageBoostUnder50HP;
+      dmg *= 1 + (selectedRace.bonuses.damageBoostUnder50HP || 0);
   }
-
   if(selectedRace.bonuses.attackSpeed) speed *= 1 + selectedRace.bonuses.attackSpeed;
+  if(selectedRace.bonuses.armorPenWeaponArts) armorPen += selectedRace.bonuses.armorPenWeaponArts;
 
-  const dps = dmg * speed;
+  // Aplicar perks
+  [selectedPerk1, selectedPerk2].forEach(p => {
+    if(!p) return;
+    switch(p.type){
+      case "damage": dmg *= 1 + p.value; break;
+      case "attackSpeed": speed *= 1 + p.value; break;
+      case "critChance": critChance += p.value; break;
+      case "critDamage": critDamage += p.value; break;
+      case "armorPen": armorPen += p.value; break;
+      case "protection": protection += p.value; break;
+    }
+  });
+
+  const dps = dmg * speed * (1 + critChance * (critDamage - 1));
 
   document.getElementById("result").innerHTML =
     `<h3>DPS Final</h3>
      <p><strong>${dps.toFixed(2)}</strong></p>
      <p>Raça: ${selectedRace.name}</p>
      <p>Arma: ${selectedWeapon.name}</p>
-     <p>Especial: ${selectedRace.special}</p>`;
+     <p>Perk 1: ${selectedPerk1 ? selectedPerk1.name : "Nenhum"}</p>
+     <p>Perk 2: ${selectedPerk2 ? selectedPerk2.name : "Nenhum"}</p>
+     <p>Proteção total: ${protection}</p>
+     <p>Penetração de armadura: ${armorPen}</p>
+     <p>Especial da raça: ${selectedRace.special}</p>`;
 }
 </script>
 
