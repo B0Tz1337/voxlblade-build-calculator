@@ -30,16 +30,22 @@
 <h1>Voxlblade Build Calculator</h1>
 
 <div class="box">
-  <label>Weapon</label>
+  <label for="blade">Blade</label>
+  <select id="blade">
+    <option value="none">None</option>
+    <!-- As Blades serão adicionadas aqui futuramente -->
+  </select>
+
+  <label for="weapon">Weapon / Handle</label>
   <select id="weapon"></select>
 
-  <label>Race</label>
+  <label for="race">Race</label>
   <select id="race"></select>
 
-  <label>Perk 1</label>
+  <label for="perk1">Perk 1</label>
   <select id="perk1"></select>
 
-  <label>Perk 2</label>
+  <label for="perk2">Perk 2</label>
   <select id="perk2"></select>
 
   <button onclick="calculate()">Calculate Build</button>
@@ -62,16 +68,38 @@ const races = [
   { name: "Bunikin", value: "bunikin", bonuses: { jumpBonus: 5, dodgeCrit: true }, special: "Esquiva garante crítico" }
 ];
 
-// ======= ARMAS =======
+// ======= BLADES (por enquanto só None) =======
+const blades = [
+  { name: "None", value: "none", baseDamage: 0, attackSpeed: 0, critChance: 0, critDamage: 1.0, armorPen: 0 }
+  // Aqui você adicionará futuramente todas as Blades com stats base
+];
+
+// ======= ARMAS / HANDLES =======
 const weapons = [
-  { name: "Gilded Pole", value: "gildedpole", baseDamage: 12, attackSpeed: 1.0, critChance: 0.05, critDamage: 1.5, armorPen: 5 },
-  { name: "Reinforced Pole", value: "reinforcedpole", baseDamage: 11, attackSpeed: 1.0, critChance: 0.05, critDamage: 1.5, armorPen: 6 },
-  { name: "Oak Bow", value: "oakbow", baseDamage: 40, attackSpeed: 1.2, critChance: 0.08, critDamage: 1.5, armorPen: 2 },
-  { name: "Fire Staff", value: "firestaff", baseDamage: 60, attackSpeed: 0.9, critChance: 0.12, critDamage: 1.6, armorPen: 0 }
+  {
+    name: "Gilded Pole",
+    value: "gildedpole",
+    baseDamage: 12,
+    attackSpeed: 1.0,
+    critChance: 0.05,
+    critDamage: 1.5,
+    armorPen: 5
+  },
+  {
+    name: "Reinforced Pole",
+    value: "reinforcedpole",
+    baseDamage: 11,
+    attackSpeed: 1.0,
+    critChance: 0.05,
+    critDamage: 1.5,
+    armorPen: 6
+  }
+  // Futuramente adicionar todas as armas oficiais
 ];
 
 // ======= PERKS =======
 const perks = [
+  { name: "Nenhum", type: "none", value: 0, description: "Nenhum bônus aplicado" },
   { name: "Sharpshooter", type: "critChance", value: 0.05, description: "Aumenta 5% de chance de crítico" },
   { name: "Berserker", type: "damage", value: 0.10, description: "Aumenta 10% de dano total" },
   { name: "Swift Footed", type: "attackSpeed", value: 0.10, description: "Aumenta 10% de velocidade de ataque" },
@@ -82,65 +110,70 @@ const perks = [
 ];
 
 // ======= POPULAR DROPDOWNS =======
-const raceSelect = document.getElementById("race");
-races.forEach(race => {
-  const option = document.createElement("option");
-  option.value = race.value;
-  option.text = race.name;
-  raceSelect.add(option);
-});
-
-const weaponSelect = document.getElementById("weapon");
-weapons.forEach(w => {
-  const option = document.createElement("option");
-  option.value = w.value;
-  option.text = w.name;
-  weaponSelect.add(option);
-});
-
-const perk1Select = document.getElementById("perk1");
-const perk2Select = document.getElementById("perk2");
-perks.forEach(p => {
-  [perk1Select, perk2Select].forEach(select => {
+function populateSelect(select, array) {
+  array.forEach(item => {
     const option = document.createElement("option");
-    option.value = p.name;
-    option.text = p.name;
+    option.value = item.value;
+    option.text = item.name;
+    option.title = item.description || item.special || "";
     select.add(option);
   });
-});
+}
+
+populateSelect(document.getElementById("race"), races);
+populateSelect(document.getElementById("blade"), blades);
+populateSelect(document.getElementById("weapon"), weapons);
+populateSelect(document.getElementById("perk1"), perks);
+populateSelect(document.getElementById("perk2"), perks);
+
+// Evitar perks duplicados
+const perk1Select = document.getElementById("perk1");
+const perk2Select = document.getElementById("perk2");
+function updatePerkOptions() {
+  const perk1Value = perk1Select.value;
+  const perk2Value = perk2Select.value;
+  [...perk1Select.options].forEach(option => option.disabled = option.value === perk2Value && option.value !== "Nenhum");
+  [...perk2Select.options].forEach(option => option.disabled = option.value === perk1Value && option.value !== "Nenhum");
+}
+perk1Select.addEventListener("change", updatePerkOptions);
+perk2Select.addEventListener("change", updatePerkOptions);
+updatePerkOptions();
 
 // ======= CÁLCULO DE DPS =======
 const playerMaxHP = 100;
-let playerHP = 100; // ajustar dinamicamente depois
+let playerHP = 100;
 
 function calculate() {
+  const bladeValue = document.getElementById("blade").value;
   const weaponValue = document.getElementById("weapon").value;
   const raceValue = document.getElementById("race").value;
-  const perk1Value = document.getElementById("perk1").value;
-  const perk2Value = document.getElementById("perk2").value;
+  const perk1Value = perk1Select.value;
+  const perk2Value = perk2Select.value;
 
+  const selectedBlade = blades.find(b => b.value === bladeValue);
   const selectedWeapon = weapons.find(w => w.value === weaponValue);
   const selectedRace = races.find(r => r.value === raceValue);
   const selectedPerk1 = perks.find(p => p.name === perk1Value);
   const selectedPerk2 = perks.find(p => p.name === perk2Value);
 
-  let dmg = selectedWeapon.baseDamage;
-  let speed = selectedWeapon.attackSpeed;
-  let critChance = selectedWeapon.critChance;
-  let critDamage = selectedWeapon.critDamage;
-  let armorPen = selectedWeapon.armorPen || 0;
+  // Stats base combinados: Blade + Weapon
+  let dmg = selectedWeapon.baseDamage + selectedBlade.baseDamage;
+  let speed = selectedWeapon.attackSpeed + selectedBlade.attackSpeed;
+  let critChance = selectedWeapon.critChance + selectedBlade.critChance;
+  let critDamage = selectedWeapon.critDamage * selectedBlade.critDamage;
+  let armorPen = selectedWeapon.armorPen + selectedBlade.armorPen;
   let protection = 0;
 
   // Bônus de raça
-  if(selectedRace.value === "human" && playerHP < 0.5 * playerMaxHP){
-      dmg *= 1 + (selectedRace.bonuses.damageBoostUnder50HP || 0);
+  if(selectedRace.value === "human" && playerHP < 0.5 * playerMaxHP) {
+    dmg *= 1 + (selectedRace.bonuses.damageBoostUnder50HP || 0);
   }
   if(selectedRace.bonuses.attackSpeed) speed *= 1 + selectedRace.bonuses.attackSpeed;
   if(selectedRace.bonuses.armorPenWeaponArts) armorPen += selectedRace.bonuses.armorPenWeaponArts;
 
   // Aplicar perks
   [selectedPerk1, selectedPerk2].forEach(p => {
-    if(!p) return;
+    if(!p || p.type === "none") return;
     switch(p.type){
       case "damage": dmg *= 1 + p.value; break;
       case "attackSpeed": speed *= 1 + p.value; break;
@@ -157,7 +190,8 @@ function calculate() {
     `<h3>DPS Final</h3>
      <p><strong>${dps.toFixed(2)}</strong></p>
      <p>Raça: ${selectedRace.name}</p>
-     <p>Arma: ${selectedWeapon.name}</p>
+     <p>Blade: ${selectedBlade.name}</p>
+     <p>Weapon / Handle: ${selectedWeapon.name}</p>
      <p>Perk 1: ${selectedPerk1 ? selectedPerk1.name : "Nenhum"}</p>
      <p>Perk 2: ${selectedPerk2 ? selectedPerk2.name : "Nenhum"}</p>
      <p>Proteção total: ${protection}</p>
