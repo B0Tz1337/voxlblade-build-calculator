@@ -37,31 +37,7 @@
   </select>
 
   <label>Race</label>
-  <select id="race">
-    // 1️⃣ Array com todas as raças e seus bônus
-const races = [
-  { name: "Human", bonuses: { damageBoostUnder50HP: 0.20, damageReductionUnder50HP: 0.20 }, special: "Bônus de dano e redução de dano quando HP < 50%" },
-  { name: "Half-Ork", bonuses: { armorPen: 10 }, special: "Bônus de Penetração de Armadura" },
-  { name: "Elf", bonuses: { runeCooldownReduction: 0.40 }, special: "Redução de 40% no cooldown das Runes" },
-  { name: "Dark Elf", bonuses: { debuffChance: 0.08 }, special: "8% de chance de aplicar debuff aleatório" },
-  { name: "Dragon-Blooded", bonuses: { warding: 0.50, protection: 10, fireColdResist: 1.0 }, special: "Resistência alta e proteção extra" },
-  { name: "Ork", bonuses: { armorPenWeaponArts: 10, tenacity: 0.2 }, special: "Bônus em Weapon Arts e Tenacity" },
-  { name: "High Elf", bonuses: { weaponArtCooldownReduction: 0.25 }, special: "Weapon Arts mais rápidos" },
-  { name: "Arborian", bonuses: { fireDefReduction: 0.50, protection: 15, healthRegen: 0.05, entangleChance: 0.05 }, special: "Regeneração e chance de entangle" },
-  { name: "Kitsune", bonuses: { jumpBonus: 2, moveSpeed: 0.10, attackSpeed: 0.10 }, special: "Mais rápido e ágil" },
-  { name: "Bunikin", bonuses: { jumpBonus: 5, dodgeCrit: true }, special: "Esquiva garante crítico" }
-];
-
-// 2️⃣ Criar opções no dropdown automaticamente
-const raceSelect = document.getElementById("race");
-races.forEach(race => {
-  const option = document.createElement("option");
-  option.value = race.name;
-  option.text = race.name;
-  raceSelect.add(option);
-});
-
-  </select>
+  <select id="race"></select>
 
   <button onclick="calculate()">Calculate Build</button>
 
@@ -69,18 +45,45 @@ races.forEach(race => {
 </div>
 
 <script>
+// ✅ Array completo de raças com bônus
+const races = [
+  { name: "Human", bonuses: { damageBoostUnder50HP: 0.20 }, special: "Bônus de dano quando HP < 50%" },
+  { name: "Half-Ork", bonuses: { armorPen: 10 }, special: "Bônus de Penetração de Armadura" },
+  { name: "Elf", bonuses: { runeCooldownReduction: 0.40 }, special: "Redução de cooldown das Runes" },
+  { name: "Dark Elf", bonuses: { debuffChance: 0.08 }, special: "Chance de aplicar debuff aleatório" },
+  { name: "Dragon-Blooded", bonuses: { warding: 0.50, protection: 10 }, special: "Alta proteção e warding" },
+  { name: "Ork", bonuses: { armorPenWeaponArts: 10, tenacity: 0.2 }, special: "Bônus em Weapon Arts e Tenacity" },
+  { name: "High Elf", bonuses: { weaponArtCooldownReduction: 0.25 }, special: "Weapon Arts mais rápidos" },
+  { name: "Arborian", bonuses: { fireDefReduction: 0.50, protection: 15 }, special: "Proteção e defesa contra fogo" },
+  { name: "Kitsune", bonuses: { jumpBonus: 2, moveSpeed: 0.10, attackSpeed: 0.10 }, special: "Mais rápido e ágil" },
+  { name: "Bunikin", bonuses: { jumpBonus: 5, dodgeCrit: true }, special: "Esquiva garante crítico" }
+];
+
+// ✅ Preenche o dropdown de raças automaticamente
+const raceSelect = document.getElementById("race");
+races.forEach(race => {
+  const option = document.createElement("option");
+  option.value = race.name.toLowerCase().replace(" ", ""); // exemplo: 'High Elf' -> 'highelf'
+  option.text = race.name;
+  raceSelect.add(option);
+});
+
+// ✅ Função de cálculo de DPS
 function calculate() {
   let dmg = 10;
   let speed = 1;
 
   const weapon = document.getElementById("weapon").value;
-  const race = document.getElementById("race").value;
+  const raceValue = document.getElementById("race").value;
 
+  // armas
   if (weapon === "gilded") { dmg = 12; speed = 1; }
   if (weapon === "reinforced") { dmg = 11; speed = 1; }
 
-  if (race === "highelf") dmg *= 1.25;
-  if (race === "kitsune") speed += 0.1;
+  // raça
+  if (raceValue === "highelf") dmg *= 1.25; // exemplo High Elf
+  if (raceValue === "kitsune") speed += 0.1; // exemplo Kitsune
+  if (raceValue === "human") dmg *= 1.2; // exemplo bônus de Human (simplificado)
 
   const dps = dmg * speed;
 
