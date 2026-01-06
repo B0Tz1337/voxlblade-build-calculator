@@ -33,11 +33,10 @@
   <label for="blade">Blade</label>
   <select id="blade">
     <option value="none">None</option>
-    <!-- As Blades serão adicionadas aqui futuramente -->
   </select>
 
-  <label for="Handle">Handle</label>
-  <select id="Handle"></select>
+  <label for="weapon">Weapon / Handle</label>
+  <select id="weapon"></select>
 
   <label for="race">Race</label>
   <select id="race"></select>
@@ -65,32 +64,14 @@ const races = [
 // ======= BLADES (por enquanto só None) =======
 const blades = [
   { name: "None", value: "none", baseDamage: 0, attackSpeed: 0, critChance: 0, critDamage: 1.0, armorPen: 0, perks: [] }
-  // Futuramente adicionar todas as Blades com stats base + perks passivos
+  // Futuramente inserir todas as Blades com stats + perks
 ];
 
 // ======= ARMAS / HANDLES =======
 const weapons = [
-  {
-    name: "Gilded Pole",
-    value: "gildedpole",
-    baseDamage: 12,
-    attackSpeed: 1.0,
-    critChance: 0.05,
-    critDamage: 1.5,
-    armorPen: 5,
-    perks: [] // perks passivos da arma, se houver
-  },
-  {
-    name: "Reinforced Pole",
-    value: "reinforcedpole",
-    baseDamage: 11,
-    attackSpeed: 1.0,
-    critChance: 0.05,
-    critDamage: 1.5,
-    armorPen: 6,
-    perks: []
-  }
-  // Futuramente adicionar todas as armas oficiais com perks passivos
+  { name: "Gilded Pole", value: "gildedpole", baseDamage: 12, attackSpeed: 1.0, critChance: 0.05, critDamage: 1.5, armorPen: 5, perks: [] },
+  { name: "Reinforced Pole", value: "reinforcedpole", baseDamage: 11, attackSpeed: 1.0, critChance: 0.05, critDamage: 1.5, armorPen: 6, perks: [] }
+  // Futuramente adicionar todas as Weapons/Handles oficiais com perks
 ];
 
 // ======= POPULAR DROPDOWNS =======
